@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Resume Processor</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    .dropzone { border: 2px dashed #cbd5e0; transition: all 0.3s; }
+    .dropzone-active { border-color: #4f46e5; background: rgba(79,70,229,0.05); }
+    .profile-image { transition: all 0.3s; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+    .profile-image:hover { transform: scale(1.02); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+    .form-field { transition: all 0.2s; }
+    .form-field:focus { box-shadow: 0 0 0 3px rgba(79,70,229,0.3); }
+  </style>
+</head>
+<body class="bg-gray-50">
+  <div class="container mx-auto px-4 py-8 max-w-6xl">
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+      <div class="bg-gradient-to-r from-indigo-600 to-purple-700 px-6 py-5 text-white">
+        <h1 class="text-2xl font-bold">Resume Processor</h1>
+        <p class="opacity-90">Upload your resume to auto-fill the application form</p>
+      </div>
+
+      <div class="md:flex">
+        <!-- LEFT -->
+        <div class="w-full md:w-1/3 bg-gray-50 p-6">
+          <div class="mb-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-3">Upload Resume</h3>
+            <div id="dropzone" class="dropzone rounded-lg p-6 cursor-pointer flex flex-col items-center justify-center mb-2">
+              <svg class="w-12 h-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+              </svg>
+              <p class="text-center"><span class="font-medium text-indigo-600">Click to upload</span> or drag and drop</p>
+              <p class="text-xs text-gray-500 mt-1">PDF files only (max 10MB)</p>
+              <input type="file" id="file-input" class="hidden" accept=".pdf" />
+            </div>
+            <p id="file-name" class="text-sm text-gray-500 text-center hidden"></p>
+          </div>
+
+          <div class="mb-6">
+            <div class="flex justify-between items-center mb-3">
+              <h3 class="text-lg font-medium text-gray-900">Profile Picture</h3>
+              <button id="change-photo-btn" class="text-sm text-indigo-600 hover:text-indigo-800 hidden">Change</button>
+            </div>
+
+            <div id="image-container" class="relative group rounded-lg overflow-hidden border-2 border-gray-200 flex justify-center items-center" style="min-height:200px">
+              <img id="profile-image" src="https://placehold.co/400x500?text=No+Photo" class="profile-image w-full h-auto max-h-64 object-contain rounded-lg" alt="profile preview">
+              <div id="image-overlay" class="absolute inset-0 bg-gray-900 bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
+                <!-- upload button will be shown/hidden by JS -->
+                <button id="upload-photo-btn" class="hidden bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg text-sm font-medium text-white">
+                  Upload Photo
+                </button>
+              </div>
+
+              <!-- manual file input (hidden) -->
+              <input type="file" id="manual-photo-upload" class="hidden" accept="image/*">
+            </div>
+
+            <p id="image-status" class="text-xs text-gray-500 mt-2 text-center"></p>
+          </div>
+        </div>
+
+        <!-- RIGHT -->
+        <div class="w-full md:w-2/3 p-6">
+          <div id="auto-fill-success" class="bg-green-50 border-l-4 border-green-500 p-4 mb-6 rounded-r-lg hidden">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+              </div>
+              <div class="ml-3">
+                <p class="text-sm text-green-700"><span class="font-medium">Success!</span> Form fields have been auto-filled from your resume. Please review.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Personal Info -->
+          <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">Personal Information</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div>
+              <label for="full-name" class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+              <input type="text" id="full-name" class="form-field w-full px-3 py-2 border border-gray-300 rounded-md"/>
+            </div>
+            <div>
+              <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <input type="email" id="email" class="form-field w-full px-3 py-2 border border-gray-300 rounded-md"/>
+            </div>
+            <div>
+              <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+              <input type="tel" id="phone" class="form-field w-full px-3 py-2 border border-gray-300 rounded-md"/>
+            </div>
+            <div>
+              <label for="linkedin" class="block text-sm font-medium text-gray-700 mb-1">LinkedIn Profile</label>
+              <input type="url" id="linkedin" placeholder="https://linkedin.com/in/username" class="form-field w-full px-3 py-2 border border-gray-300 rounded-md"/>
+            </div>
+          </div>
+
+          <!-- Summary -->
+          <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">Professional Summary</h2>
+          <div class="mb-6">
+            <textarea id="summary" rows="3" class="form-field w-full px-3 py-2 border border-gray-300 rounded-md"></textarea>
+          </div>
+
+          <!-- Experience -->
+          <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">Work Experience</h2>
+          <div id="experience-section" class="space-y-4 mb-6">
+            <!-- dynamic -->
+          </div>
+          <button id="add-experience" type="button" class="mb-6 inline-flex items-center px-4 py-2 text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">Add Work Experience</button>
+
+          <!-- Education -->
+          <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">Education</h2>
+          <div id="education-section" class="space-y-4 mb-6">
+            <!-- dynamic -->
+          </div>
+          <button id="add-education" type="button" class="mb-6 inline-flex items-center px-4 py-2 text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">Add Education</button>
+
+          <!-- Skills -->
+          <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">Skills</h2>
+          <div class="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <textarea id="skills" rows="3" class="form-field w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Comma separated skills"></textarea>
+          </div>
+
+          <div class="flex justify-end">
+            <button type="submit" class="inline-flex items-center px-6 py-3 text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">Submit Application</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  // Elements
+  const dropzone = document.getElementById("dropzone");
+  const fileInput = document.getElementById("file-input");
+  const fileNameDisplay = document.getElementById("file-name");
+  const profileImage = document.getElementById("profile-image");
+  const uploadPhotoBtn = document.getElementById("upload-photo-btn");
+  const changePhotoBtn = document.getElementById("change-photo-btn");
+  const manualPhotoUpload = document.getElementById("manual-photo-upload");
+  const autoFillSuccess = document.getElementById("auto-fill-success");
+  const imageStatus = document.getElementById("image-status");
+
+  // Form fields
+  const fullNameField = document.getElementById("full-name");
+  const emailField = document.getElementById("email");
+  const phoneField = document.getElementById("phone");
+  const linkedinField = document.getElementById("linkedin");
+  const summaryField = document.getElementById("summary");
+  const skillsField = document.getElementById("skills");
+
+  // Init: ensure at least one template for education & experience
+  renderEducation([], "");
+  renderExperience([]);
+
+  // Drag & drop handlers
+  function handleDragOver(e){ e.preventDefault(); dropzone.classList.add("dropzone-active"); }
+  function handleDragLeave(){ dropzone.classList.remove("dropzone-active"); }
+  function handleDrop(e){
+    e.preventDefault();
+    dropzone.classList.remove("dropzone-active");
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      fileInput.files = e.dataTransfer.files;
+      handleFileUpload();
+    }
+  }
+
+  dropzone.addEventListener("click", () => fileInput.click());
+  dropzone.addEventListener("dragover", handleDragOver);
+  dropzone.addEventListener("dragleave", handleDragLeave);
+  dropzone.addEventListener("drop", handleDrop);
+  fileInput.addEventListener("change", handleFileUpload);
+
+  // Manual photo upload flow
+  uploadPhotoBtn.addEventListener("click", () => manualPhotoUpload.click());
+  changePhotoBtn.addEventListener("click", () => manualPhotoUpload.click());
+  manualPhotoUpload.addEventListener("change", handleManualPhotoUpload);
+
+  document.getElementById("add-experience").addEventListener("click", addExperienceSection);
+  document.getElementById("add-education").addEventListener("click", addEducationSection);
+
+  // --- file upload (PDF) ---
+  function handleFileUpload(){
+    if (!fileInput.files || !fileInput.files.length) return;
+    const file = fileInput.files[0];
+    if (!file) return;
+
+    fileNameDisplay.classList.remove("hidden");
+    fileNameDisplay.innerHTML = `Processing <span class="animate-pulse">...</span>`;
+    dropzone.classList.add("opacity-75");
+
+    const fd = new FormData();
+    fd.append("file", file);
+
+    fetch("/upload", { method: "POST", body: fd })
+      .then(r => {
+        // handle server error json too
+        if (!r.ok) return r.json().then(err => { throw new Error(err.error || "Server error"); });
+        return r.json();
+      })
+      .then(data => {
+        // fields auto-fill
+        if (data.fields) {
+          autoFillForm(data.fields);
+          autoFillSuccess.classList.remove("hidden");
+        }
+
+        // image handling
+        if (data.image) {
+          // server returned a base64 image
+          profileImage.src = `data:image/png;base64,${data.image}`;
+          hideUploadButton();
+          showChangeButton();
+          imageStatus.textContent = "Extracted from your resume";
+        } else if (data.manual_image_required) {
+          // No image in PDF -> prompt manual upload
+          showUploadButton();
+          hideChangeButton();
+          profileImage.src = "https://placehold.co/400x500?text=No+Photo";
+          imageStatus.textContent = "No photo found in resume — upload manually";
+        } else {
+          // fallback
+          hideUploadButton();
+          hideChangeButton();
+          imageStatus.textContent = "No photo available";
+        }
+      })
+      .catch(err => {
+        Swal.fire({ title: "Error", text: "Failed to process resume: " + err.message, icon: "error" });
+      })
+      .finally(() => {
+        fileNameDisplay.textContent = file.name;
+        dropzone.classList.remove("opacity-75");
+      });
+  }
+
+  function showUploadButton(){
+    uploadPhotoBtn.classList.remove("hidden","opacity-0");
+    uploadPhotoBtn.classList.add("inline-block");
+  }
+  function hideUploadButton(){
+    uploadPhotoBtn.classList.add("hidden");
+    uploadPhotoBtn.classList.remove("inline-block");
+  }
+  function showChangeButton(){ changePhotoBtn.classList.remove("hidden"); }
+  function hideChangeButton(){ changePhotoBtn.classList.add("hidden"); }
+
+  function handleManualPhotoUpload(){
+    const f = manualPhotoUpload.files[0];
+    if (!f) return;
+    if (!f.type.match("image.*")) {
+      Swal.fire({ title: "Invalid File", text: "Please upload an image file (JPEG, PNG, etc.)", icon: "error" });
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      profileImage.src = e.target.result;
+      hideUploadButton();
+      showChangeButton();
+      imageStatus.textContent = "Manually uploaded photo";
+      // (Optional) send to server to save — not implemented here
+    };
+    reader.readAsDataURL(f);
+  }
+
+  // --- Auto-fill form ---
+  function autoFillForm(fields){
+    // accept both 'name' and 'full_name'
+    if (fields.name) fullNameField.value = fields.name;
+    else if (fields.full_name) fullNameField.value = fields.full_name;
+
+    if (fields.email) emailField.value = fields.email;
+    if (fields.phone) phoneField.value = fields.phone;
+    if (fields.linkedin) linkedinField.value = fields.linkedin;
+    if (fields.summary) summaryField.value = fields.summary;
+
+    if (fields.skills) {
+      const skillsText = fields.skills.replace(/\n/g, ", ").replace(/\s*,\s*/g, ", ");
+      skillsField.value = skillsText;
+    }
+
+    // EXPERIENCE: support either structured list or fallback text
+    if (Array.isArray(fields.experience_list) && fields.experience_list.length) {
+      renderExperience(fields.experience_list);
+    } else if (fields.experience_text) {
+      renderExperience([], fields.experience_text);
+    }
+
+    // EDUCATION
+    renderEducation(fields.education_list || [], fields.education_text || "");
+  }
+
+  // --- Render helpers for education & experience ---
+  function renderExperience(list = [], fallbackText = ""){
+    const container = document.getElementById("experience-section");
+    container.innerHTML = "";
+    if (Array.isArray(list) && list.length) {
+      list.forEach(item => {
+        const el = document.createElement("div");
+        el.className = "experience-entry bg-gray-50 p-4 rounded-lg border border-gray-200";
+        el.innerHTML = `
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+            <div><label class="block text-sm font-medium text-gray-700 mb-1">Job Title</label><input type="text" class="exp-title form-field w-full px-3 py-2 border border-gray-300 rounded-md" value="${escapeHtml(item.title||"")}"></div>
+            <div><label class="block text-sm font-medium text-gray-700 mb-1">Company</label><input type="text" class="exp-company form-field w-full px-3 py-2 border border-gray-300 rounded-md" value="${escapeHtml(item.company||"")}"></div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+            <div><label class="block text-sm font-medium text-gray-700 mb-1">Dates</label><input type="text" class="exp-dates form-field w-full px-3 py-2 border border-gray-300 rounded-md" value="${escapeHtml(item.dates||"")}" ></div>
+            <div><label class="block text-sm font-medium text-gray-700 mb-1">Location</label><input type="text" class="exp-location form-field w-full px-3 py-2 border border-gray-300 rounded-md" value="${escapeHtml(item.location||"")}" ></div>
+          </div>
+          <div><label class="block text-sm font-medium text-gray-700 mb-1">Description</label><textarea class="exp-description form-field w-full px-3 py-2 border border-gray-300 rounded-md" rows="2">${escapeHtml(item.description||"")}</textarea></div>
+          <div class="mt-3 text-right"><button type="button" class="remove-section text-sm text-red-600 hover:text-red-800">Remove</button></div>
+        `;
+        container.appendChild(el);
+        el.querySelector(".remove-section").addEventListener("click", () => el.remove());
+      });
+    } else if (fallbackText) {
+      const wrap = document.createElement("div");
+      wrap.className = "experience-entry bg-gray-50 p-4 rounded-lg border border-gray-200";
+      wrap.innerHTML = `<textarea class="form-field w-full px-3 py-2 border border-gray-300 rounded-md" rows="4">${escapeHtml(fallbackText)}</textarea>`;
+      container.appendChild(wrap);
+    } else {
+      // empty template
+      addExperienceSection();
+    }
+  }
+
+  function renderEducation(list = [], fallbackText = ""){
+    const container = document.getElementById("education-section");
+    container.innerHTML = "";
+    if (Array.isArray(list) && list.length) {
+      list.forEach(edu => {
+        const el = createEducationSection();
+        el.querySelector(".edu-degree").value = edu.degree || "";
+        el.querySelector(".edu-institution").value = edu.institution || "";
+        el.querySelector(".edu-year").value = edu.year || "";
+        el.querySelector(".edu-field").value = edu.field || "";
+        container.appendChild(el);
+      });
+    } else if (fallbackText) {
+      const div = document.createElement("div");
+      div.className = "education-entry bg-gray-50 p-4 rounded-lg border border-gray-200";
+      div.innerHTML = `<textarea class="form-field w-full px-3 py-2 border border-gray-300 rounded-md" rows="4">${escapeHtml(fallbackText)}</textarea>`;
+      container.appendChild(div);
+    } else {
+      container.appendChild(createEducationSection());
+    }
+  }
+
+  // Add experience section (blank)
+  function addExperienceSection(){
+    const container = document.getElementById("experience-section");
+    const el = document.createElement("div");
+    el.className = "experience-entry bg-gray-50 p-4 rounded-lg border border-gray-200";
+    el.innerHTML = `
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+        <div><label class="block text-sm font-medium text-gray-700 mb-1">Job Title</label><input type="text" class="exp-title form-field w-full px-3 py-2 border border-gray-300 rounded-md"></div>
+        <div><label class="block text-sm font-medium text-gray-700 mb-1">Company</label><input type="text" class="exp-company form-field w-full px-3 py-2 border border-gray-300 rounded-md"></div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+        <div><label class="block text-sm font-medium text-gray-700 mb-1">Dates</label><input type="text" class="exp-dates form-field w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="e.g., 2021–2024"></div>
+        <div><label class="block text-sm font-medium text-gray-700 mb-1">Location</label><input type="text" class="exp-location form-field w-full px-3 py-2 border border-gray-300 rounded-md"></div>
+      </div>
+      <div><label class="block text-sm font-medium text-gray-700 mb-1">Description</label><textarea class="exp-description form-field w-full px-3 py-2 border border-gray-300 rounded-md" rows="2"></textarea></div>
+      <div class="mt-3 text-right"><button type="button" class="remove-section text-sm text-red-600 hover:text-red-800">Remove</button></div>
+    `;
+    container.appendChild(el);
+    el.querySelector(".remove-section").addEventListener("click", () => el.remove());
+  }
+
+  // Create a new education block (blank)
+  function createEducationSection(){
+    const el = document.createElement("div");
+    el.className = "education-entry bg-gray-50 p-4 rounded-lg border border-gray-200";
+    el.innerHTML = `
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+        <div><label class="block text-sm font-medium text-gray-700 mb-1">Degree</label><input type="text" class="edu-degree form-field w-full px-3 py-2 border border-gray-300 rounded-md"></div>
+        <div><label class="block text-sm font-medium text-gray-700 mb-1">Institution</label><input type="text" class="edu-institution form-field w-full px-3 py-2 border border-gray-300 rounded-md"></div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div><label class="block text-sm font-medium text-gray-700 mb-1">Year</label><input type="text" class="edu-year form-field w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="e.g., 2020–2024"></div>
+        <div><label class="block text-sm font-medium text-gray-700 mb-1">Field of Study</label><input type="text" class="edu-field form-field w-full px-3 py-2 border border-gray-300 rounded-md"></div>
+      </div>
+      <div class="mt-3 text-right"><button type="button" class="remove-section text-sm text-red-600 hover:text-red-800">Remove</button></div>
+    `;
+    el.querySelector(".remove-section").addEventListener("click", () => el.remove());
+    return el;
+  }
+
+  function addEducationSection(){
+    const container = document.getElementById("education-section");
+    container.appendChild(createEducationSection());
+  }
+
+  // simple HTML escaper for inserted values
+  function escapeHtml(s){ return (s===null||s===undefined) ? "" : String(s).replace(/[&<>"']/g, function(m){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]; }); }
+
+});
+</script>
+</body>
+</html>
